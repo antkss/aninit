@@ -46,7 +46,7 @@ alias aninit='aninit --template-path ~/.config/pwninit-template.py --template-bi
 
 
 ### Download
-Download binary from the [releases page](https://github.com/antkss/pwninit/releases).
+Download binary from the [releases page](https://github.com/antkss/aninit/releases).
 
 
 Note that `openssl`, `liblzma`, and `pkg-config` are required for the build.
