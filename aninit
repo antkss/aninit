@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# my idea with bash script, you can ignore it
 # Function to print usage
 usage() {
   echo "Usage: $0 <binary> [-l libc] [-ld loader] [-h]"
