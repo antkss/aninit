@@ -1,8 +1,3 @@
-[![Checks Status](https://github.com/io12/pwninit/workflows/checks/badge.svg)](https://github.com/io12/pwninit/actions)
-[![Deploy Status](https://github.com/io12/pwninit/workflows/deploy/badge.svg)](https://github.com/io12/pwninit/actions)
-[![](https://img.shields.io/crates/v/pwninit)](https://crates.io/crates/pwninit)
-[![](https://docs.rs/pwninit/badge.svg)](https://docs.rs/pwninit)
-
 # `aninit`
 
 remake pwninit
