@@ -15,8 +15,10 @@ remake pwninit
 - Patch the binary with [`patchelf`](https://github.com/NixOS/patchelf) to use
   the correct RPATH and interpreter for the provided libc
 - Fill in a template pwntools solve script
-- replace libc download server
-- add unstripping with pwn.libcdb
+
+## new things 
+- replace libc faster download server
+- add unstripping with pwn.libcdb (because i like it)
 
 ## Usage
 
