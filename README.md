@@ -46,9 +46,7 @@ alias aninit='aninit --template-path ~/.config/pwninit-template.py --template-bi
 
 
 ### Download
-
-You can download statically-linked [musl](https://www.musl-libc.org/)
-binaries from the [releases page](https://github.com/antkss/pwninit/releases).
+Download binary from the [releases page](https://github.com/antkss/pwninit/releases).
 
 
 Note that `openssl`, `liblzma`, and `pkg-config` are required for the build.
