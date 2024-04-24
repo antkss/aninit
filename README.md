@@ -3,9 +3,9 @@
 [![](https://img.shields.io/crates/v/pwninit)](https://crates.io/crates/pwninit)
 [![](https://docs.rs/pwninit/badge.svg)](https://docs.rs/pwninit)
 
-# `pwninit`
+# `aninit`
 
-A tool for automating starting binary exploit challenges
+remake pwninit
 
 ## Features
 
@@ -15,112 +15,108 @@ A tool for automating starting binary exploit challenges
 - Patch the binary with [`patchelf`](https://github.com/NixOS/patchelf) to use
   the correct RPATH and interpreter for the provided libc
 - Fill in a template pwntools solve script
+- replace libc download server
+- add unstripping with pwn.libcdb
 
 ## Usage
 
 ### Short version
 
-Run `pwninit`
+Run `aninit`
 
-### Long version
+or
 
-Run `pwninit` in a directory with the relevant files and it will detect which ones are the binary, libc, and linker. If the detection is wrong, you can specify the locations with `--bin`, `--libc`, and `--ld`.
+Run `aninit` in a directory with the relevant files and it will detect which ones are the binary, libc, and linker. If the detection is wrong, you can specify the locations with `-b binary`, `-l libc.so`, and `-d ld.so`.
 
 #### Custom `solve.py` template
 
-If you don't like the default template, you can use your own. Just specify `--template-path <path>`. Check [template.py](src/template.py) for the template format. The names of the `exe`, `libc`, and `ld` bindings can be customized with `--template-bin-name`, `--template-libc-name`, and `--template-ld-name`.
+If you don't like the default template, you can use your own. Just specify `--template-path <path>`. Check [template.py](src/template.py) for the template format. The names of the `binary`, `libc`, and `ld` bindings can be customized with `--template-bin-name`, `--template-libc-name`, and `--template-ld-name`.
 
 ##### Persisting custom `solve.py`
 
-You can make `pwninit` load your custom template automatically by adding an alias to your `~/.bashrc`.
+You can make `aninit` load your custom template automatically by adding an alias to your `~/.bashrc`.
 
 ###### Example
 
 ```bash
-alias pwninit='pwninit --template-path ~/.config/pwninit-template.py --template-bin-name e'
+alias aninit='aninit --template-path ~/.config/pwninit-template.py --template-bin-name e'
 ```
 
 ## Install
 
-### Arch Linux
-
-Install [`pwninit`](https://aur.archlinux.org/packages/pwninit/) or
-[`pwninit-bin`](https://aur.archlinux.org/packages/pwninit-bin/) from the AUR.
 
 ### Download
 
 You can download statically-linked [musl](https://www.musl-libc.org/)
-binaries from the [releases page](https://github.com/io12/pwninit/releases).
+binaries from the [releases page](https://github.com/antkss/pwninit/releases).
 
-### Using cargo
-
-Run
-
-```sh
-cargo install pwninit
-```
-
-This places the binary in `~/.cargo/bin`.
 
 Note that `openssl`, `liblzma`, and `pkg-config` are required for the build.
 
 ## Example
 
 ```sh
-$ ls
-hunter  libc.so.6  readme
-
-$ pwninit
-bin: ./hunter
+🍎 >> ls
+ld-2.23.so*  libc.so.6*  vuln*  vuln.i64
+[  home/as/Music  ]
+🍎 >> aninit 
+bin: ./vuln
 libc: ./libc.so.6
+ld: ./ld-2.23.so
 
-setting ./hunter executable
-fetching linker
-https://launchpad.net/ubuntu/+archive/primary/+files//libc6_2.23-0ubuntu10_i386.deb
-unstripping libc
-https://launchpad.net/ubuntu/+archive/primary/+files//libc6-dbg_2.23-0ubuntu10_i386.deb
-setting ./ld-2.23.so executable
-copying ./hunter to ./hunter_patched
-running patchelf on ./hunter_patched
+output: [*] Using cached data from '/home/as/.cache/.pwntools-cache-3.11/libcdb_dbg/build_id/131c254aed46e6a24cb08f3abe802ea0ef50e5f9'
+[x] Starting local process '/usr/bin/eu-unstrip'
+[+] Starting local process '/usr/bin/eu-unstrip': pid 94704
+[x] Receiving all data
+[x] Receiving all data: 0B
+[+] Receiving all data: Done (0B)
+[*] Process '/usr/bin/eu-unstrip' stopped with exit code 0 (pid 94704)
+
+copying ./vuln to ./vulne
+running patchelf on ./vulne
 writing solve.py stub
-
-$ ls
-hunter	hunter_patched	ld-2.23.so  libc.so.6  readme  solve.py
+[  home/as/Music  ]
+🍎 >> 
 ```
 
 `solve.py`:
 
 ```python
 #!/usr/bin/env python3
-
 from pwn import *
 
-exe = ELF("./hunter_patched")
+exe = ELF("./vulne")
 libc = ELF("./libc.so.6")
 ld = ELF("./ld-2.23.so")
-
-context.binary = exe
-
-
 def conn():
-    if args.LOCAL:
-        r = process([exe.path])
-        if args.DEBUG:
-            gdb.attach(r)
+    if args.REMOTE:
+        p = remote("addr", 1337)
     else:
-        r = remote("addr", 1337)
+        context.terminal = ["foot"]
+        p = process([exe.path])
+        gdb.attach(p, gdbscript='''
 
-    return r
+        ''')
+    return p
+info = lambda msg: log.info(msg)
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
 
-
-def main():
-    r = conn()
-
-    # good luck pwning :)
-
-    r.interactive()
 
 
 if __name__ == "__main__":
-    main()
+    p = conn()
+
+
+
+
+
+
+
+    # good luck pwning :)
+    p.interactive()
 ```
+## why remake ?
+- because the server that author is using is so hilariously slow 
