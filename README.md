@@ -43,7 +43,8 @@ alias aninit='aninit --template-path ~/.config/pwninit-template.py --template-bi
 Download binary from the [releases page](https://github.com/antkss/aninit/releases).
 automatically install: 
 ```bash
-sudo wget "https://github.com/antkss/aninit/releases/download/release/aninit.xz" -O ~/.cache | sudo tar -xf ~/.cache/aninit.xz -C /bin/```
+sudo wget "https://github.com/antkss/aninit/releases/download/release/aninit.xz" -O ~/.cache | sudo tar -xf ~/.cache/aninit.xz -C /bin/
+```
 
 Note that `openssl`, `liblzma`, and `pkg-config` are required for the build.
 
