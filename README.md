@@ -19,10 +19,6 @@ remake pwninit
 
 ### Short version
 
-Run `aninit`
-
-or
-
 Run `aninit` in a directory with the relevant files and it will detect which ones are the binary, libc, and linker. If the detection is wrong, you can specify the locations with `-b binary`, `-l libc.so`, and `-d ld.so`.
 
 #### Custom `solve.py` template
