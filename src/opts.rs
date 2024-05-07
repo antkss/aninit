@@ -93,9 +93,9 @@ impl Opts {
             }
         };
 
-        f(&self.b, "bin", Color::BrightBlue);
-        f(&self.l, "libc", Color::Yellow);
-        f(&self.d, "ld", Color::Green);
+        f(&self.b, "pwn.bin", Color::BrightBlue);
+        f(&self.l, "pwn.libc", Color::Yellow);
+        f(&self.d, "pwn.ld", Color::Green);
     }
 
     /// For the unspecified files, try to guess their path

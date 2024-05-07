@@ -41,7 +41,7 @@ fn make_bindings(opts: &Opts) -> String {
     fn bind_line<P: AsRef<Path>>(name: &str, opt_path: Option<P>) -> Option<String> {
         opt_path
             .as_ref()
-            .map(|path| format!("{} = ELF(\"{}\")", name, path.as_ref().display(),))
+            .map(|path| format!("{} = pwn.ELF(\"{}\")", name, path.as_ref().display(),))
     }
 
     // Create bindings and join them with newlines
