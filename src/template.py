@@ -4,11 +4,12 @@ import pwn
 {bindings}
 pwn.context.log_level='debug'
 pwn.context.terminal = ["foot"]
-p = pwn.gdb.debug({proc_args},"""
-
-                """)
 if pwn.args.REMOTE:
     p = pwn.remote("addr", 1337)
+else:
+    p = pwn.gdb.debug({proc_args},"""
+
+                    """)
 
 sla = lambda msg, data: p.sendlineafter(msg, data)
 sa = lambda msg, data: p.sendafter(msg, data)
