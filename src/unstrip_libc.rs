@@ -67,12 +67,26 @@ fn do_unstrip_libc(libc: &Path) -> Result {
     // libc_deb::write_ubuntu_pkg_file(&deb_file_name, &name, &sym_path).context(DebSnafu)?;
     //
     // let out = Command::new("python3 -c 'import pwn; pwn.libcdb.unstrip_libc(\"./libc-2.23.so\")'")?;
-  let cmd = Command::new("python3")
+  let mut input = String::new();
+
+    println!("unstrip? y to continue: ");
+
+    std::io::stdin().read_line(&mut input)
+        .expect("Failed to read line");
+
+    let input_char = input.trim();
+
+    if input_char == "y" {
+      let cmd = Command::new("python3")
         .arg("-c")
        .arg(format!("import pwn; pwn.libcdb.unstrip_libc(\"{}\")", libc.display()))
        .output()
         .expect("Failed to execute command");
-    println!("output: {}", String::from_utf8_lossy(&cmd.stdout));
+        println!("output: {}", String::from_utf8_lossy(&cmd.stdout));
+    } else {
+        println!("nounstrip!!");
+        return Ok(());
+    }
         // .arg(libc)
         // .arg(&sym_path)
         // .output()
