@@ -14,7 +14,7 @@ use snafu::ResultExt;
 use snafu::Snafu;
 
 /// URL for Ubuntu glibc packages
-pub static PKG_URL: &str = "http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/";
+pub static PKG_URL: &str = "http://archive.ubuntu.com/ubuntu/pool/main/g/glibc";
 
 pub type Result<T> = std::result::Result<T, Error>;
 

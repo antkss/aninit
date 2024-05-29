@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-import pwn
+from pwn import *
 
 {bindings}
-pwn.context.log_level='debug'
-pwn.context.terminal = ["foot"]
-if pwn.args.REMOTE:
-    p = pwn.remote("addr", 1337)
+# context.log_level='debug'
+context.terminal = ["foot"]
+if args.REMOTE:
+    p = remote("addr", 1337)
 else:
-    p = pwn.gdb.debug({proc_args},"""
+    p = process({proc_args})
+    gdb.attach(p, """"
 
-                    """)
+               """)
+    # p = gdb.debug({proc_args},"""
+    #
+    #                 """)
 
 sla = lambda msg, data: p.sendlineafter(msg, data)
 sa = lambda msg, data: p.sendafter(msg, data)
@@ -17,8 +21,6 @@ sl = lambda data: p.sendline(data)
 s = lambda data: p.send(data)
 
 
-if __name__ == "__main__":
-    # p = conn()
 
 
 
@@ -26,5 +28,6 @@ if __name__ == "__main__":
 
 
 
-    # good luck pwning :)
-    p.interactive()
+p.interactive()
+# good luck pwning :)
+
