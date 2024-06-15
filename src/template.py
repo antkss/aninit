@@ -8,7 +8,7 @@ if args.REMOTE:
     p = remote("addr", 1337)
 else:
     p = process({proc_args})
-    gdb.attach(p, """
+    gdb.attach(p, gdbscript="""
 
                """)
     # p = gdb.debug({proc_args},"""
