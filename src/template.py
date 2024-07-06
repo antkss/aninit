@@ -3,7 +3,7 @@ from pwn import *
 
 {bindings}
 # context.log_level='debug'
-context.terminal = ["foot"]
+context.terminal = ["alacritty","-e"]
 if args.REMOTE:
     p = remote("addr", 1337)
 else:

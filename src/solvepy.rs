@@ -91,9 +91,9 @@ fn make_stub(opts: &Opts) -> Result<String> {
 /// specified directory, unless a `solve.py` already exists
 pub fn write_stub(opts: &Opts) -> Result<()> {
     let stub = make_stub(opts)?;
-    let path = Path::new("solve.py");
+    let path = Path::new("solve");
     if !path.exists() {
-        println!("{}", "writing solve.py stub".cyan().bold());
+        println!("{}", "writing solve stub".cyan().bold());
         fs::write(path, stub).context(WriteSnafu)?;
         set_exec(path).context(SetExecSnafu)?;
     }
