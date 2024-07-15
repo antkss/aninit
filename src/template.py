@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
 
 {bindings}
 # context.log_level='debug'
 context.terminal = ["alacritty","-e"]
-if args.REMOTE:
-    p = remote("addr", 1337)
-else:
-    p = process({proc_args})
+# p = remote("addr", 1337)
+p = process({proc_args})
+def gdbs():
     gdb.attach(p, gdbscript="""
 
                """)
