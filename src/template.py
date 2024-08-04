@@ -5,7 +5,7 @@ warnings.filterwarnings("ignore")
 
 {bindings}
 # context.log_level='debug'
-context.terminal = ["alacritty","-e"]
+context.terminal = ["foot"]
 # p = remote("addr", 1337)
 p = process({proc_args})
 def gdbs():
