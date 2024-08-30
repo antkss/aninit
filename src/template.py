@@ -2,7 +2,12 @@
 from pwn import *
 import warnings
 warnings.filterwarnings("ignore")
-
+import signal
+def handle(signum, frame):
+    import os
+    os.system("killall gdb")
+    exit()
+signal.signal(signal.SIGINT, handle)
 {bindings}
 # context.log_level='debug'
 context.terminal = ["foot"]
