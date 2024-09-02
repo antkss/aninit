@@ -11,10 +11,10 @@ def handle(signum, frame):
 signal.signal(signal.SIGINT, handle)
 {bindings}
 # context.log_level='debug'
-context.terminal = ["foot"]
 # p = remote("addr", 1337)
 p = process({proc_args})
 def gdbs():
+    context.terminal = ["foot"]
     gdb.attach(p, gdbscript="""
 
                """)
