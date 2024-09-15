@@ -2,13 +2,6 @@
 from pwn import *
 import warnings
 warnings.filterwarnings("ignore")
-import signal
-def handle(signum, frame):
-    import os
-    print("killall gdb...")
-    os.system("killall gdb")
-    exit()
-signal.signal(signal.SIGINT, handle)
 {bindings}
 # context.log_level='debug'
 # p = remote("addr", 1337)
