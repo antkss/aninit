@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore")
 # context.log_level='debug'
 # p = remote("addr", 1337)
 p = process({proc_args})
-def gdbs():
+def GDB():
     context.terminal = ["foot"]
     gdb.attach(p, gdbscript="""
 
