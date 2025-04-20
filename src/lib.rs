@@ -58,7 +58,7 @@ pub fn is_ld(path: &Path) -> elf::detect::Result<bool> {
 /// Same as `fetch_ld()`, but doesn't do anything if an existing linker is
 /// detected
 fn maybe_fetch_ld(opts: &Opts, ver: &LibcVersion) -> fetch_ld::Result {
-    match opts.d {
+    match opts.ld {
         Some(_) => Ok(()),
         None => fetch_ld(ver),
     }
@@ -68,28 +68,27 @@ fn maybe_fetch_ld(opts: &Opts, ver: &LibcVersion) -> fetch_ld::Result {
 ///   1. Download linker if not found
 ///   2. Unstrip libc if libc is stripped
 fn visit_libc(opts: &Opts, libc: &Path) {
-    let ver = match LibcVersion::detect(libc){
+    let ver = match LibcVersion::detect(libc) {
         Ok(ver) => ver,
         Err(err) => {
-            err.warn("failed detecting libc version (is the libc an Ubuntu glibc?) but it still can be unstripped");
-            unstrip_libc(libc).warn("failed unstripping libc");
+            err.warn("failed detecting libc version (is the libc an Ubuntu glibc?)");
             return;
         }
     };
     maybe_fetch_ld(opts, &ver).warn("failed fetching ld");
-    unstrip_libc(libc).warn("failed unstripping libc");
+    unstrip_libc(libc, &ver).warn("failed unstripping libc");
 }
 
 /// Same as `visit_libc()`, but doesn't do anything if no libc is found
 pub fn maybe_visit_libc(opts: &Opts) {
-    if let Some(libc) = &opts.l {
+    if let Some(libc) = &opts.libc {
         visit_libc(opts, libc)
     }
 }
 
 /// Set the binary executable
 pub fn set_bin_exec(opts: &Opts) -> io::Result<()> {
-    match &opts.b {
+    match &opts.bin {
         Some(bin) => {
             if !bin.is_executable() {
                 println!(
@@ -107,7 +106,7 @@ pub fn set_bin_exec(opts: &Opts) -> io::Result<()> {
 
 /// Set the detected linker executable
 pub fn set_ld_exec(opts: &Opts) -> io::Result<()> {
-    match &opts.d {
+    match &opts.ld {
         Some(ld) if !ld.is_executable() => {
             println!(
                 "{}",

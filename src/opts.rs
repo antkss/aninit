@@ -37,19 +37,19 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[setters(prefix = "with_")]
 pub struct Opts {
     /// Binary to pwn
-    #[structopt(short)]
+    #[structopt(long)]
     #[setters(generate)]
-    pub b: Option<PathBuf>,
+    pub bin: Option<PathBuf>,
 
     /// Challenge libc
-    #[structopt(short)]
+    #[structopt(long)]
     #[setters(generate)]
-    pub l: Option<PathBuf>,
+    pub libc: Option<PathBuf>,
 
     /// A linker to preload the libc
-    #[structopt(short)]
+    #[structopt(long)]
     #[setters(generate)]
-    pub d: Option<PathBuf>,
+    pub ld: Option<PathBuf>,
 
     /// Path to custom pwntools solve script template. Check the README for more
     /// information.
@@ -93,9 +93,9 @@ impl Opts {
             }
         };
 
-        f(&self.b, "pwn.bin", Color::BrightBlue);
-        f(&self.l, "pwn.libc", Color::Yellow);
-        f(&self.d, "pwn.ld", Color::Green);
+        f(&self.bin, "bin", Color::BrightBlue);
+        f(&self.libc, "libc", Color::Yellow);
+        f(&self.ld, "ld", Color::Green);
     }
 
     /// For the unspecified files, try to guess their path
@@ -121,8 +121,8 @@ impl Opts {
 
         Ok(self
             .clone()
-            .with_b(self.b.or(f(is_bin)?))
-            .with_l(self.l.or(f(is_libc)?))
-            .with_d(self.d.or(f(is_ld)?)))
+            .with_bin(self.bin.or(f(is_bin)?))
+            .with_libc(self.libc.or(f(is_libc)?))
+            .with_ld(self.ld.or(f(is_ld)?)))
     }
 }

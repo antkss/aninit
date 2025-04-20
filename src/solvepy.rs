@@ -50,10 +50,10 @@ fn make_bindings(opts: &Opts) -> String {
             &opts.template_bin_name,
             patch_bin::bin_patched_path(opts)
                 .as_ref()
-                .or(opts.b.as_ref()),
+                .or(opts.bin.as_ref()),
         ),
-        bind_line(&opts.template_libc_name, opts.l.as_ref()),
-        bind_line(&opts.template_ld_name, opts.d.as_ref()),
+        bind_line(&opts.template_libc_name, opts.libc.as_ref()),
+        bind_line(&opts.template_ld_name, opts.ld.as_ref()),
     ]
     .iter()
     .filter_map(|x| x.as_ref())
@@ -93,7 +93,7 @@ pub fn write_stub(opts: &Opts) -> Result<()> {
     let stub = make_stub(opts)?;
     let path = Path::new("solve");
     if !path.exists() {
-        println!("{}", "writing solve stub".cyan().bold());
+        println!("{}", "writing solve.py stub".cyan().bold());
         fs::write(path, stub).context(WriteSnafu)?;
         set_exec(path).context(SetExecSnafu)?;
     }

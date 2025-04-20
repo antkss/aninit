@@ -14,7 +14,6 @@ use snafu::ResultExt;
 use snafu::Snafu;
 
 /// URL for Ubuntu glibc packages
-pub static PKG_URL: &str = "http://archive.ubuntu.com/ubuntu/pool/main/g/glibc";
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -54,6 +53,8 @@ pub enum Error {
     #[snafu(display("failed to find file in data.tar"))]
     FileNotFound,
 
+    #[snafu(display("no file is downloaded"))]
+    NoDownload,
     #[snafu(display("failed reading file entry in data.tar: {}", source))]
     Read { source: std::io::Error },
 
@@ -72,7 +73,6 @@ pub enum Error {
     ))]
     DataExt { ext: Vec<u8> },
 }
-
 /// Try to download a file from a URL
 fn request_url(url: &str) -> Result<reqwest::blocking::Response> {
     println!("{}", url.green().bold());
@@ -87,11 +87,45 @@ fn request_url(url: &str) -> Result<reqwest::blocking::Response> {
 
 /// Try to get a glibc deb package with a given filename, checking both current
 /// and archive Ubuntu mirrors
-fn request_ubuntu_pkg(deb_file_name: &str) -> Result<reqwest::blocking::Response> {
-    let url = format!("{}/{}", PKG_URL, deb_file_name);
-    request_url(&url)
-}
 
+fn request_ubuntu_pkg(deb_file_name: &str) -> Result<reqwest::blocking::Response> {
+    let urls = vec![
+        "https://launchpad.net/ubuntu/+archive/primary/+files",
+        "https://mirror.us.leaseweb.net/ubuntu/pool/main/g/glibc",
+        "http://vn.archive.ubuntu.com/ubuntu/pool/main/g/glibc",
+        "https://mirror.tuna.tsinghua.edu.cn/ubuntu/pool/main/g/glibc",
+    ];
+
+    // Measure response time to sort URLs
+    let mut timed_urls: Vec<_> = urls
+        .iter()
+        .filter_map(|url| {
+            let ping_url = format!("{}/", url.trim_end_matches('/'));
+            let start = std::time::Instant::now();
+            let ok = reqwest::blocking::get(&ping_url).is_ok();
+            let duration = start.elapsed();
+            if ok {
+                Some((url.to_string(), duration))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Sort by fastest response time
+    timed_urls.sort_by_key(|(_, dur)| *dur);
+
+    for (base_url, _) in timed_urls {
+        let full_url = format!("{}/{}", base_url.trim_end_matches('/'), deb_file_name);
+        println!("Trying: {}", full_url);
+        match request_url(&full_url) {
+            Ok(response) => return Ok(response),
+            Err(e) => eprintln!("Failed to download from {}: {}", base_url, e),
+        }
+    }
+
+    Err(Error::NoDownload)
+}
 /// Download the glibc deb package with a given name, find a file inside it, and
 /// extract the file.
 pub fn write_ubuntu_pkg_file<P: AsRef<Path>>(

@@ -1,21 +1,22 @@
-use crate::elf;use crate::libc_deb;
-// use crate::libc_version::LibcVersion;
+use crate::elf;
+use crate::libc_deb;
+use crate::libc_version::LibcVersion;
 
-// use std::io::copy;
-// use std::io::stderr;
-// use std::io::stdout;
-// use std::io::Write;
+use std::io::copy;
+use std::io::stderr;
+use std::io::stdout;
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 use std::process::ExitStatus;
-
-// use colored::Colorize;
-// use ex::fs::File;
+use colored::Colorize;
+use ex::fs::File;
 use ex::io;
-// use snafu::ResultExt;
+use std::io::stdin;
+use snafu::ResultExt;
 use snafu::Snafu;
-// use tempfile::TempDir;
-// use version_compare::Cmp;
+use tempfile::TempDir;
+use version_compare::Cmp;
 
 #[derive(Debug, Snafu)]
 #[allow(clippy::enum_variant_names)]
@@ -48,68 +49,65 @@ pub enum Error {
 pub type Result = std::result::Result<(), Error>;
 
 /// Download debug symbols and apply them to a libc
-fn do_unstrip_libc(libc: &Path) -> Result {
-    // println!("{}", "unstripping libc".yellow().bold());
-    //
-    // let deb_file_name = format!("libc6-dbg_{}.deb", ver);
-    //
-    // let tmp_dir = TempDir::new().context(TmpDirSnafu)?;
-    //
-    // let sym_path = tmp_dir.path().join("libc-syms");
-    //
-    // let name = if version_compare::compare_to(&ver.string_short, "2.34", Cmp::Lt).unwrap() {
-    //     format!("libc-{}.so", ver.string_short)
-    // } else {
-    //     let build_id = elf::get_build_id(libc).context(ElfParseSnafu)?;
-    //     build_id.chars().skip(2).collect::<String>() + ".debug"
-    // };
-    //
-    // libc_deb::write_ubuntu_pkg_file(&deb_file_name, &name, &sym_path).context(DebSnafu)?;
-    //
-    // let out = Command::new("python3 -c 'import pwn; pwn.libcdb.unstrip_libc(\"./libc-2.23.so\")'")?;
-  let mut input = String::new();
+fn do_unstrip_libc(libc: &Path, ver: &LibcVersion) -> Result {
+    println!("{}", "unstripping libc".yellow().bold());
 
-    println!("unstrip? y to continue: ");
+    let deb_file_name = format!("libc6-dbg_{}.deb", ver);
 
-    std::io::stdin().read_line(&mut input)
-        .expect("Failed to read line");
+    let tmp_dir = TempDir::new().context(TmpDirSnafu)?;
 
-    let input_char = input.trim();
+    let sym_path = tmp_dir.path().join("libc-syms");
 
-    if input_char == "y" {
-      let cmd = Command::new("python3")
-        .arg("-c")
-       .arg(format!("import pwn; pwn.libcdb.unstrip_libc(\"{}\")", libc.display()))
-       .output()
-        .expect("Failed to execute command");
-        println!("output: {}", String::from_utf8_lossy(&cmd.stdout));
+    let name = if version_compare::compare_to(&ver.string_short, "2.34", Cmp::Lt).unwrap() {
+        format!("libc-{}.so", ver.string_short)
     } else {
-        println!("nounstrip!!");
-        return Ok(());
+        let build_id = elf::get_build_id(libc).context(ElfParseSnafu)?;
+        println!("build id {}", build_id);
+        build_id.chars().skip(2).collect::<String>() + ".debug"
+    };
+
+    libc_deb::write_ubuntu_pkg_file(&deb_file_name, &name, &sym_path).context(DebSnafu)?;
+
+    let out = Command::new("eu-unstrip")
+        .arg(libc)
+        .arg(&sym_path)
+        .output()
+        .context(CmdRunSnafu)?;
+    let _ = stderr().write_all(&out.stderr);
+    let _ = stdout().write_all(&out.stdout);
+    if !out.status.success() {
+        return Err(Error::CmdFail { status: out.status });
     }
-        // .arg(libc)
-        // .arg(&sym_path)
-        // .output()
-        // .context(CmdRunSnafu)?;
-    // let _ = stderr().write_all(&out.stderr);
-    // let _ = stdout().write_all(&out.stdout);
-    // if !out.status.success() {
-    //     return Err(Error::CmdFail { status: out.status });
-    // }
-    //
-    // let mut sym_file = File::open(sym_path).context(SymOpenSnafu)?;
-    // let mut libc_file = File::create(libc).context(LibcOpenSnafu)?;
-    // copy(&mut sym_file, &mut libc_file).context(LibcWriteSnafu)?;
-    // println!("{:?}",out);
-    //
+
+    let mut sym_file = File::open(sym_path).context(SymOpenSnafu)?;
+    let mut libc_file = File::create(libc).context(LibcOpenSnafu)?;
+    copy(&mut sym_file, &mut libc_file).context(LibcWriteSnafu)?;
+
     Ok(())
 }
 
 /// Download debug symbols and apply them to a libc if it doesn't have them
 /// already
-pub fn unstrip_libc(libc: &Path) -> Result {
-    // if !elf::has_debug_syms(libc).context(ElfParseSnafu)? {
-        do_unstrip_libc(libc)?;
-    // }
+pub fn unstrip_libc(libc: &Path, ver: &LibcVersion) -> Result {
+    print!("Do you want to continue? (y/n): ");
+    stdout().flush().unwrap();
+
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+
+    let response = input.trim().to_lowercase();
+
+    if response == "n" {
+        println!("Operation canceled.");
+        return Ok(());
+    }
+
+    if response == "y" {
+        println!("Continuing...");
+        // Your code here
+    }
+    if !elf::has_debug_syms(libc).context(ElfParseSnafu)? {
+        do_unstrip_libc(libc, ver)?;
+    }
     Ok(())
 }

@@ -53,14 +53,14 @@ fn run_patchelf(bin: &Path, opts: &Opts) -> Result<()> {
     );
 
     if let Some(lib_dir) = opts
-        .l
+        .libc
         .as_ref()
         // Prepend "." in case `libc`'s `parent()` is an empty path.
         .and_then(|libc| Path::new(".").join(libc).parent().map(Path::to_path_buf))
     {
         run_patchelf_option(bin, "--set-rpath", &lib_dir)?;
     };
-    if let Some(ld) = &opts.d {
+    if let Some(ld) = &opts.ld {
         run_patchelf_option(bin, "--set-interpreter", ld)?;
     };
 
@@ -128,7 +128,7 @@ pub fn bin_patched_path(opts: &Opts) -> Option<PathBuf> {
     match opts.no_patch_bin {
         true => None,
         false => opts
-            .b
+            .bin
             .as_ref()
             .and_then(|bin| bin_patched_path_from_bin(bin).ok()),
     }
@@ -158,8 +158,8 @@ fn copy_patched(bin: &Path) -> Result<PathBuf> {
 /// copy the binary,
 /// and run patchelf on the copied binary.
 pub fn patch_bin(opts: &Opts) -> Result<()> {
-    if let Some(bin) = &opts.b {
-        if let Some(libc) = &opts.l {
+    if let Some(bin) = &opts.bin {
+        if let Some(libc) = &opts.libc {
             symlink_libc(libc)?;
         }
 
