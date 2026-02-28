@@ -1,3 +1,5 @@
+use crate::fetch_ld::fetch_pkg;
+use crate::libc_deb::URLS;
 use crate::maybe_visit_libc;
 use crate::opts;
 use crate::patch_bin;
@@ -36,26 +38,41 @@ pub type Result = std::result::Result<(), Error>;
 pub fn run(opts: Opts) -> Result {
     // Detect unspecified files
     let opts = opts.find_if_unspec().context(FindSnafu)?;
-
-    // Print detected files
-    opts.print();
-    println!();
-
-    set_bin_exec(&opts).context(SetBinExecSnafu)?;
-    maybe_visit_libc(&opts);
-
-    // Redo detection in case the ld was downloaded
-    let opts = opts.find_if_unspec().context(FindSnafu)?;
-
-    set_ld_exec(&opts).context(SetLdExecSnafu)?;
-
-    if !opts.no_patch_bin {
-        patch_bin::patch_bin(&opts).context(PatchBinSnafu)?;
+    if opts.src {
+        println!("list source: ");
+        for url in URLS {
+            println!("{}", url);
+        }
+        return Ok(())
     }
+    if opts.download == "" {
+        // Print detected files
+        opts.print();
+        println!();
 
-    if !opts.no_template {
-        solvepy::write_stub(&opts).context(SolvepySnafu)?;
+        set_bin_exec(&opts).context(SetBinExecSnafu)?;
+        maybe_visit_libc(&opts);
+
+        // Redo detection in case the ld was downloaded
+        let opts = opts.find_if_unspec().context(FindSnafu)?;
+
+        set_ld_exec(&opts).context(SetLdExecSnafu)?;
+
+        if !opts.no_patch_bin {
+            patch_bin::patch_bin(&opts).context(PatchBinSnafu)?;
+        }
+
+        if !opts.no_template {
+            solvepy::write_stub(&opts).context(SolvepySnafu)?;
+        }
+    } else {
+        println!("format: libc version + _ + architecture");
+        println!("etc: 2.27-3ubuntu1_amd64");
+        let _ = fetch_pkg(&opts.download);
     }
+    // return Ok(());
+
+
 
     Ok(())
 }

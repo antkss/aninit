@@ -1,5 +1,6 @@
 use crate::cpu_arch::CpuArch;
 use crate::libc_deb;
+use crate::libc_deb::download_and_extract;
 use crate::libc_version::LibcVersion;
 
 use colored::Colorize;
@@ -37,5 +38,11 @@ pub fn fetch_ld(ver: &LibcVersion) -> Result {
     let out_name = format!("ld-{}.so", ver.string_short);
 
     libc_deb::write_ubuntu_pkg_file(&deb_file_name, &ld_name, out_name).context(DebSnafu)?;
+    Ok(())
+}
+pub fn fetch_pkg(ver: &str) -> Result {
+    println!("{}", "fetching pkg".green().bold());
+    let deb_file_name = format!("libc6_{}.deb", ver);
+    download_and_extract(&deb_file_name);
     Ok(())
 }

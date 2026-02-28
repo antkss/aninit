@@ -16,6 +16,12 @@ use snafu::Snafu;
 /// URL for Ubuntu glibc packages
 
 pub type Result<T> = std::result::Result<T, Error>;
+pub const URLS: &[&str] = &[
+    "https://launchpad.net/ubuntu/+archive/primary/+files",
+    "https://mirror.us.leaseweb.net/ubuntu/pool/main/g/glibc",
+    "http://vn.archive.ubuntu.com/ubuntu/pool/main/g/glibc",
+    "https://mirror.tuna.tsinghua.edu.cn/ubuntu/pool/main/g/glibc",
+];
 
 /// Helper function that decides whether the tar file `entry` matches
 /// `file_name`
@@ -89,15 +95,10 @@ fn request_url(url: &str) -> Result<reqwest::blocking::Response> {
 /// and archive Ubuntu mirrors
 
 fn request_ubuntu_pkg(deb_file_name: &str) -> Result<reqwest::blocking::Response> {
-    let urls = vec![
-        "https://launchpad.net/ubuntu/+archive/primary/+files",
-        "https://mirror.us.leaseweb.net/ubuntu/pool/main/g/glibc",
-        "http://vn.archive.ubuntu.com/ubuntu/pool/main/g/glibc",
-        "https://mirror.tuna.tsinghua.edu.cn/ubuntu/pool/main/g/glibc",
-    ];
+
 
     // Measure response time to sort URLs
-    let mut timed_urls: Vec<_> = urls
+    let mut timed_urls: Vec<_> = URLS
         .iter()
         .filter_map(|url| {
             let ping_url = format!("{}/", url.trim_end_matches('/'));
@@ -125,6 +126,64 @@ fn request_ubuntu_pkg(deb_file_name: &str) -> Result<reqwest::blocking::Response
     }
 
     Err(Error::NoDownload)
+}
+pub fn download_and_extract(deb_file_name: &str) {
+    let out_path = "./out";
+    let deb_bytes = request_ubuntu_pkg(deb_file_name);
+    match deb_bytes {
+        Ok(deb_bytes) =>  {
+            let mut deb = ar::Archive::new(deb_bytes);
+            while let Some(Ok(entry)) = deb.next_entry() {
+                let path = entry.header().identifier();
+                let path = Path::new(OsStr::from_bytes(path));
+
+                let stem = path.file_stem().map(OsStr::as_bytes);
+                if stem != Some(b"data.tar") {
+                    continue;
+                }
+
+                // Detect extension and decompress
+                let ext = path
+                    .extension()
+                    .map(OsStr::as_bytes);
+                match ext {
+                    Some(_ext) => {
+                        let reader: Box<dyn Read> = match _ext  {
+                            b"gz" => {
+                                Box::new(flate2::read::GzDecoder::new(entry))
+                            },
+                            b"xz" => {
+                                match LzmaReader::new_decompressor(entry) {
+                                    Ok(decompressor) => Box::new(decompressor),
+                                    Err(e) => {
+                                        eprintln!("❌ LZMA error: {:?}", e);
+                                        return; 
+                                    }
+                                }
+                            },
+                            b"zst" => {
+                                let decoder = zstd::stream::read::Decoder::new(entry)
+                                    .expect("❌ Failed to initialize Zstd decoder");
+                                Box::new(decoder)
+                            },
+                            _ => Box::new(entry),
+                        };
+
+                        let mut archive = tar::Archive::new(reader);
+                        match archive.unpack(out_path) {
+                            Ok(()) => println!("deb extracted to {}", out_path), 
+                            Err(e) => println!("Error: {}", e)
+                        }
+
+                    },
+                    None => println!("file with no extension !")
+                }
+            }
+                
+        },
+        Err(e) => println!("Error: {}", e)
+
+    }
 }
 /// Download the glibc deb package with a given name, find a file inside it, and
 /// extract the file.

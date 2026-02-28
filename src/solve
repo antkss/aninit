@@ -4,7 +4,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # context.log_level='debug'
+context.arch='amd64'
 # p = remote("addr", 1337)
+# p = process("".split())
 p = process([exe.path])
 script="""
 """
@@ -21,12 +23,5 @@ s = lambda data: p.send(data)
 
 
 
-
-
-
-
-
-
 p.interactive()
-# good luck pwning :)
 
