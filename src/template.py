@@ -5,8 +5,10 @@ warnings.filterwarnings("ignore")
 {bindings}
 # context.log_level='debug'
 # p = remote("addr", 1337)
+# p = process("".split())
 p = process({proc_args})
 script="""
+gdbsync start
 """
 def GDB():
     context.terminal = ["alacritty", "-e"]
@@ -18,6 +20,8 @@ sla = lambda msg, data: p.sendlineafter(msg, data)
 sa = lambda msg, data: p.sendafter(msg, data)
 sl = lambda data: p.sendline(data)
 s = lambda data: p.send(data)
+open(".dbgpid", "w").write(str(p.pid))
+
 
 
 
